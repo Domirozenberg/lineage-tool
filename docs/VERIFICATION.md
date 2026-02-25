@@ -3,6 +3,9 @@
 Step-by-step instructions to manually verify each completed task.
 Run these after setup or when validating the environment from scratch.
 
+> **Note**: In code blocks below, copy only the command text — not the ` ```bash ` line.
+> That is a syntax highlighting hint, not part of the command.
+
 ---
 
 ## Phase 1: Foundation & Core Architecture
