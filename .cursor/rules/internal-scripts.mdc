@@ -1,0 +1,22 @@
+---
+description: Internal scripts must be kept in a dedicated folder
+alwaysApply: true
+---
+
+# Internal Scripts Location
+
+Scripts created for internal use (development, testing, automation, maintenance) must be placed in a dedicated folder.
+
+**Folder**: `scripts/` at project root
+
+**Examples**:
+- `scripts/setup_dev.py` - development environment setup
+- `scripts/seed_test_data.py` - test data generation
+- `scripts/run_migrations.sh` - migration runner
+
+**Do not** place internal scripts in:
+- Project root
+- `app/` or `src/` (application code)
+- Scattered across the repo
+
+**Exception**: One-off scripts in `scripts/` may use subfolders for organization (e.g. `scripts/etl/`, `scripts/connectors/`).

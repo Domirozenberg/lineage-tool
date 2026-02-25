@@ -1,0 +1,28 @@
+---
+description: Update progress file when tasks and their tests are completed
+alwaysApply: true
+---
+
+# Progress Tracking
+
+Maintain a progress file at `PROGRESS.md` at the project root. Update it each time a task and its tests (if they exist) are completed.
+
+**When to update**:
+- After completing a task from the plan (`.cursor/plan.md`)
+- After completing the corresponding acceptance/unit tests for that task
+- Mark task as done only when both implementation and tests pass
+
+**Format** (use checkboxes, number items as phase.task):
+```markdown
+## Phase 1: Foundation
+- [x] 1.1 Set up project structure
+  - [x] tests/unit/test_project_structure.py
+- [ ] 1.2 Design universal metadata schema
+  - [ ] tests/unit/test_schema.py
+```
+
+**Rules**:
+- Add a task to PROGRESS.md when you start working on it
+- Check off `[ ]` → `[x]` when task + tests are done
+- If tests don't exist: create them first, then mark complete
+- Include date and brief note for significant milestones (optional)

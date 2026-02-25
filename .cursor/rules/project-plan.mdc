@@ -1,0 +1,33 @@
+---
+description: Universal Data Lineage Tool - project plan and architecture context
+alwaysApply: true
+---
+
+# Universal Data Lineage Tool - Project Context
+
+This project builds a **generic data lineage tool** for multi-platform environments. When implementing features, refer to the full plan at `.cursor/plan.md`.
+
+## Core Architecture (5 Components)
+1. **Metadata Extractors** - Plugin-based, offline/online modes, auth abstraction
+2. **Metadata Normalization** - Universal schema (DataSource, DataObject, Lineage, Column)
+3. **Lineage Engine** - Neo4j graph, impact analysis, change detection
+4. **API Layer** - FastAPI, REST + GraphQL, JWT/auth
+5. **Visualization** - React/Vue, D3/Cytoscape/React Flow for graph UI
+
+## Tech Stack
+- **Backend**: Python 3.9+, FastAPI, Neo4j, Redis, Celery
+- **Frontend**: React or Vue, graph lib (D3/Cytoscape/React Flow), Material-UI or Ant Design
+- **Infra**: Docker, Kubernetes, Prometheus, ELK
+
+## Implementation Phases (20 weeks)
+1. Foundation (W1-3): Schema, Neo4j, FastAPI, auth
+2. PostgreSQL connector (W4-6): First DB connector, SQL parsing, column lineage
+3. Tableau connector (W7-9): REST API, workbooks, dashboards
+4. Visualization (W10-12): Graph UI, search, impact analysis
+5. More connectors (W13-16): Snowflake, PowerBI, dbt, Airflow
+6. Advanced (W17-20): Data quality, versioning, alerting, compliance
+
+## Connector Pattern
+- **BaseConnector** ABC with `extract_metadata()`, `extract_lineage()`, `test_connection()`
+- **Auth modes**: offline, username_password, api_key, oauth, saml, key_file, service_account
+- Connectors support offline (file import) and online (direct connection) modes

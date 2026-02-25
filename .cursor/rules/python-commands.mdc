@@ -1,0 +1,29 @@
+---
+description: Always use pip3 and python3 for Python commands
+alwaysApply: true
+---
+
+# Python Command Conventions
+
+Always use `pip3` and `python3` explicitly—never `pip` or `python`.
+
+**Correct**:
+```bash
+pip3 install -r requirements.txt
+python3 -m venv venv
+python3 scripts/setup_dev.py
+python3 -m pytest tests/
+```
+
+**Incorrect**:
+```bash
+pip install -r requirements.txt   # ❌ use pip3
+python -m venv venv                # ❌ use python3
+python script.py                   # ❌ use python3
+```
+
+**Apply to**:
+- All terminal commands
+- Shell scripts
+- Documentation and README
+- CI/CD configuration (e.g. `actions/setup-python` with `python-version` is fine; use `python3` in run steps)
