@@ -26,3 +26,4 @@ Maintain a progress file at `docs/PROGRESS.md`. Update it each time a task and i
 - Check off `[ ]` → `[x]` when task + tests are done
 - If tests don't exist: create them first, then mark complete
 - Include date and brief note for significant milestones (optional)
+- After completing each task, add a manual verification section to `docs/VERIFICATION.md`

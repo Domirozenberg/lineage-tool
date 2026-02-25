@@ -86,6 +86,10 @@ pre-commit run --all-files
 uvicorn app.main:app --reload
 ```
 
+## Verification
+
+See [`docs/VERIFICATION.md`](docs/VERIFICATION.md) for step-by-step manual verification checklists for each completed task.
+
 ## Architecture
 
 See `docs/architecture.excalidraw` for the full architecture diagram and `.cursor/plan.md` for the implementation plan.
