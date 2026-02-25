@@ -12,14 +12,14 @@ This project is configured for [Claude Code](https://code.claude.com/). Use thes
 2. **Key files Claude reads**
    - `AGENTS.md` / `CLAUDE.md` - Project conventions and instructions
    - `.cursor/plan.md` - Full implementation plan
-   - `PROGRESS.md` - Task tracking
+   - `docs/PROGRESS.md` - Task tracking
 
 ## Slash Commands
 
 | Command | Description |
 |---------|-------------|
 | `/test` | Run test suite (`python3 -m pytest tests/ -v`) |
-| `/progress` | Update PROGRESS.md after completing a task |
+| `/progress` | Update docs/PROGRESS.md after completing a task |
 | `/setup` | Set up dev environment (venv, pip3 install) |
 
 ## Subagents
@@ -37,7 +37,9 @@ This project is configured for [Claude Code](https://code.claude.com/). Use thes
 lineage-tool/
 ├── AGENTS.md           # Main agent instructions (industry standard)
 ├── CLAUDE.md           # Claude Code config (imports AGENTS.md)
-├── PROGRESS.md         # Task completion tracking
+├── docs/
+│   ├── PROGRESS.md    # Task completion tracking
+│   └── architecture.excalidraw  # System architecture diagram
 ├── .claude/
 │   ├── commands/      # Slash commands (/test, /progress, /setup)
 │   ├── rules/         # Path-based rules (python, scripts)
@@ -55,7 +57,7 @@ lineage-tool/
 
 - **Python**: Always `pip3` and `python3`
 - **Scripts**: Internal scripts in `scripts/` only
-- **Progress**: Update PROGRESS.md when task + tests complete
+- **Progress**: Update docs/PROGRESS.md when task + tests complete
 
 ## CLI Usage
 

@@ -88,7 +88,7 @@ uvicorn app.main:app --reload
 
 ## Architecture
 
-See `architecture.excalidraw` for the full architecture diagram and `.cursor/plan.md` for the implementation plan.
+See `docs/architecture.excalidraw` for the full architecture diagram and `.cursor/plan.md` for the implementation plan.
 
 ### Core Components
 

@@ -25,7 +25,7 @@ Build a generic data lineage tool for multi-platform environments (databases, BI
 | Path | Purpose |
 |------|---------|
 | `.cursor/plan.md` | Full project plan, phases, acceptance tests |
-| `PROGRESS.md` | Task completion tracking |
+| `docs/PROGRESS.md` | Task completion tracking |
 | `scripts/` | Internal/dev scripts |
 | `app/` or `src/` | Application code (when created) |
 

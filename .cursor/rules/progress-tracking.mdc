@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Progress Tracking
 
-Maintain a progress file at `PROGRESS.md` at the project root. Update it each time a task and its tests (if they exist) are completed.
+Maintain a progress file at `docs/PROGRESS.md`. Update it each time a task and its tests (if they exist) are completed.
 
 **When to update**:
 - After completing a task from the plan (`.cursor/plan.md`)
