@@ -35,7 +35,7 @@ Defined in `requirements.txt`. Installed in production and development.
 ### Pydantic `>=2.6.0`
 | | |
 |---|---|
-| **Why** | Data validation library used by FastAPI. Pydantic v2 is significantly faster than v1 and has a cleaner API. |
+| **Why** | Data validation library used by FastAPI. git  v2 is significantly faster than v1 and has a cleaner API. |
 | **What it does** | Defines and validates all domain models (`DataSource`, `DataObject`, `Column`, `Lineage`), API request/response schemas, and app configuration. |
 | **Used in** | `app/models/schema.py`, `app/core/config.py`, all API route models |
 
@@ -340,6 +340,22 @@ Tools that will be added as the project progresses.
 | React + TypeScript | Frontend framework |
 | React Flow or Cytoscape.js | Interactive lineage graph rendering |
 | Material-UI or Ant Design | Component library |
+
+### Phase 2 — PostgreSQL Connector (implemented)
+| Tool | Purpose |
+|---|---|
+| `psycopg2-binary>=2.9.0` | PostgreSQL database driver (connection pool, queries) |
+| `sqlglot>=23.0.0` | SQL parsing for view/function lineage extraction (already in requirements.txt) |
+| `psycopg2.pool.ThreadedConnectionPool` | Thread-safe connection pooling for concurrent extractions |
+
+Key files:
+- `app/connectors/postgresql/connector.py` — `PostgreSQLConnector` (online + offline modes)
+- `app/connectors/postgresql/extractor.py` — `information_schema` / `pg_catalog` queries
+- `app/connectors/postgresql/lineage_parser.py` — `SqlLineageParser` using sqlglot
+- `app/connectors/postgresql/offline_exporter.py` — export to JSON for air-gapped use
+- `app/api/v1/routers/connectors.py` — REST endpoints (`/connectors/postgresql/*`)
+- `scripts/seed_test_db.py` — seeds `lineage_sample` DB with 50+ objects
+- `scripts/export_pg_offline.py` — CLI export to offline folder
 
 ### Phase 5+ — Additional Connectors
 | Tool | Purpose |

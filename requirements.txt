@@ -28,5 +28,8 @@ sqlglot>=23.0.0
 # JSON Schema validation
 jsonschema>=4.21.0
 
+# PostgreSQL connector
+psycopg2-binary>=2.9.0
+
 # Utilities
 python-dotenv>=1.0.0

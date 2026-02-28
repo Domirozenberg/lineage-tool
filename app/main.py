@@ -5,7 +5,7 @@ import redis as redis_lib
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.v1.routers import columns, lineage, objects, sources
+from app.api.v1.routers import columns, connectors, lineage, objects, sources
 from app.api.v1.routers import auth as auth_router
 from app.core.config import settings
 from app.core.errors import (
@@ -74,6 +74,7 @@ app.include_router(sources.router, prefix=settings.API_V1_STR)
 app.include_router(objects.router, prefix=settings.API_V1_STR)
 app.include_router(columns.router, prefix=settings.API_V1_STR)
 app.include_router(lineage.router, prefix=settings.API_V1_STR)
+app.include_router(connectors.router, prefix=settings.API_V1_STR)
 
 
 # --- Health ---

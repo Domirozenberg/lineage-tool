@@ -349,4 +349,231 @@ print('missing:', validate_offline_folder('/tmp', ['missing.json']))
 
 ---
 
+## Phase 2: PostgreSQL Connector
+
+### Prerequisites
+
+```bash
+cd /Users/drozenberg/lineage-tool
+source venv/bin/activate
+docker compose up -d
+# Wait for postgres to be healthy:
+docker exec lineage-postgres pg_isready -U lineage -d lineage_sample
+```
+
+### Task 2.1–2.2 — Seed and extract metadata
+
+```bash
+# Seed the test database (idempotent — safe to re-run)
+python3 scripts/seed_test_db.py
+
+# Expected output:
+#   Schemas: 3 (dw, raw, rpt)
+#   Tables:  35
+#   Views:   14
+#   Materialized views: 2
+#   Functions: 2
+```
+
+### Task 2.2 — Verify metadata extraction
+
+```bash
+python3 -c "
+from app.connectors.postgresql.connector import PostgreSQLConnector
+from app.connectors.base import AuthMode
+
+cfg = {'host':'localhost','port':5433,'dbname':'lineage_sample','user':'lineage','password':'lineage','source_name':'manual_test'}
+c = PostgreSQLConnector(cfg, AuthMode.USERNAME_PASSWORD)
+print('Connected:', c.test_connection())
+meta = c.extract_metadata()
+print('DataSource:', meta['datasource'].name)
+print('Objects:', len(meta['objects']))
+print('Columns:', len(meta['columns']))
+c._close_pool()
+"
+# Expected:
+#   Connected: True
+#   DataSource: manual_test
+#   Objects: >= 52
+#   Columns: >= 200
+```
+
+### Task 2.3–2.4 — Verify lineage extraction
+
+```bash
+python3 -c "
+from app.connectors.postgresql.connector import PostgreSQLConnector
+from app.connectors.base import AuthMode
+
+cfg = {'host':'localhost','port':5433,'dbname':'lineage_sample','user':'lineage','password':'lineage','source_name':'manual_test','include_column_lineage':True}
+c = PostgreSQLConnector(cfg, AuthMode.USERNAME_PASSWORD)
+lin = c.extract_lineage()
+edges = lin['lineage']
+print('Total lineage edges:', len(edges))
+fk_edges = [e for e in edges if e.lineage_type.value == 'reference']
+view_edges = [e for e in edges if e.lineage_type.value in ('direct','derived')]
+print('FK edges:', len(fk_edges))
+print('View edges:', len(view_edges))
+with_col_maps = [e for e in edges if e.column_mappings]
+print('Edges with column maps:', len(with_col_maps))
+c._close_pool()
+"
+# Expected:
+#   Total lineage edges: > 30
+#   FK edges: > 20
+#   View edges: > 10
+#   Edges with column maps: > 0
+```
+
+### Task 2.4 — Verify SQL lineage parser directly
+
+```bash
+python3 -c "
+from app.connectors.postgresql.lineage_parser import SqlLineageParser
+
+p = SqlLineageParser(dialect='postgres')
+sql = '''
+WITH totals AS (SELECT customer_id, SUM(total_amt) AS spent FROM raw.orders GROUP BY customer_id)
+SELECT c.email, t.spent FROM raw.customers c JOIN totals t ON t.customer_id = c.customer_id
+'''
+refs = p.extract_table_refs(sql)
+print('Table refs:', refs)
+# Expected: [('raw', 'orders'), ('raw', 'customers')] — 'totals' CTE excluded
+"
+```
+
+### Task 2.5 — Run unit tests (no database needed)
+
+```bash
+python3 -m pytest tests/unit/test_lineage_parser.py -v
+# Expected: 24 passed
+```
+
+### Task 2.5 — Run integration tests
+
+```bash
+python3 -m pytest tests/integration/test_postgresql_connector.py -v
+# Expected: 22 passed
+
+python3 -m pytest tests/integration/test_connector_api.py -v
+# Expected: 12 passed
+```
+
+### Task 2.5 — Full suite (all 266 tests)
+
+```bash
+python3 -m pytest tests/ -v
+# Expected: 266 passed
+```
+
+### Task 2.6 — Offline export
+
+```bash
+python3 scripts/export_pg_offline.py --output /tmp/pg_offline_export
+ls /tmp/pg_offline_export/
+# Expected files: tables.json, columns.json, foreign_keys.json, view_definitions.json, functions.json
+```
+
+### Task 2.6 — API endpoints (requires server running)
+
+```bash
+# Start the API server
+uvicorn app.main:app --reload --port 8000 &
+
+# Get token
+TOKEN=$(curl -s -X POST http://localhost:8000/api/v1/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"admin@lineage-tool.dev","password":"change-me-in-production"}' \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
+
+# Test connection
+curl -s -X POST http://localhost:8000/api/v1/connectors/postgresql/test-connection \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"host":"localhost","port":5433,"dbname":"lineage_sample","user":"lineage","password":"lineage"}' \
+  | python3 -m json.tool
+
+# Offline validate
+curl -s -X POST http://localhost:8000/api/v1/connectors/offline/validate \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"folder_path":"/tmp/pg_offline_export"}' \
+  | python3 -m json.tool
+```
+
+---
+
+## Connecting to your own PostgreSQL database
+
+No code changes are needed. The connector accepts any PostgreSQL connection details at runtime.
+
+### 1. Test the connection first
+
+Replace the values below with your actual credentials:
+
+```bash
+TOKEN=$(curl -s -X POST http://localhost:8000/api/v1/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"admin@lineage-tool.dev","password":"change-me-in-production"}' \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
+
+curl -s -X POST http://localhost:8000/api/v1/connectors/postgresql/test-connection \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "source_name": "my_database",
+    "host": "localhost",
+    "port": 5430,
+    "dbname": "yourdb",
+    "user": "youruser",
+    "password": "yourpass"
+  }' | python3 -m json.tool
+# Expected: {"connected": true, "version": "PostgreSQL XX.X", "schemas": [...]}
+```
+
+Available ports from your existing containers:
+- `ek-postgres` → port `5429`
+- `my-postgres-db` → port `5430`
+- `airflow_projects-postgres-1` → internal only (no mapped port)
+
+### 2. Run full extraction
+
+```bash
+curl -s -X POST http://localhost:8000/api/v1/connectors/postgresql/extract \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "source_name": "my_database",
+    "host": "localhost",
+    "port": 5430,
+    "dbname": "yourdb",
+    "user": "youruser",
+    "password": "yourpass",
+    "include_column_lineage": true
+  }' | python3 -m json.tool
+# Expected: {"source_id": "...", "objects": N, "columns": N, "lineage_edges": N, "duration_seconds": N}
+```
+
+To limit to specific schemas only (recommended for large databases):
+```json
+"schemas": ["public", "analytics"]
+```
+
+### 3. Query the extracted lineage via the API
+
+```bash
+# List all extracted data sources
+curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8000/api/v1/sources/ | python3 -m json.tool
+
+# Get all objects from your source (replace SOURCE_ID with the id from step 2)
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:8000/api/v1/objects/?source_id=SOURCE_ID" | python3 -m json.tool
+
+# Get downstream impact from any object (replace OBJECT_ID)
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:8000/api/v1/lineage/impact/OBJECT_ID/downstream" | python3 -m json.tool
+```
+
+---
+
 *Add a new section here after each completed task.*

@@ -24,6 +24,15 @@ class Settings(BaseSettings):
     # Redis
     REDIS_URL: str = "redis://localhost:6379"
 
+    # PostgreSQL connector defaults
+    PG_HOST: str = "localhost"
+    PG_PORT: int = 5433
+    PG_DBNAME: str = "lineage_sample"
+    PG_USER: str = "lineage"
+    PG_PASSWORD: str = "lineage"
+    PG_MIN_CONN: int = 1
+    PG_MAX_CONN: int = 10
+
     # Auth
     SECRET_KEY: str = "change-me-in-production"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
