@@ -283,10 +283,14 @@ Tools that will be added as the project progresses.
 | `app/db/repositories/column.py` | Column CRUD + `list_by_object()` (ordered by position) |
 | `app/db/repositories/lineage.py` | Lineage CRUD + `list_by_source/target()`, `get_downstream()`, `get_upstream()` graph traversals |
 
-### Phase 1.4 — Graph database setup
-| Tool | Purpose |
+### Phase 1.4 — Graph database setup ✓ done
+| Component | Purpose |
 |---|---|
-| Neo4j driver + APOC | Cypher-based repository layer, index creation, constraint enforcement |
+| `app/db/neo4j.py` (updated) | Connection pool wired from config (`NEO4J_MAX_CONNECTION_POOL_SIZE`, `NEO4J_MAX_CONNECTION_LIFETIME_S`, etc.) + `get_db_status()` |
+| `app/main.py` (updated) | `/health` endpoint now reports live Neo4j + Redis status |
+| `scripts/backup_neo4j.sh` | APOC online export to a timestamped `.cypher` file in `./backups/` |
+| `scripts/restore_neo4j.sh` | Replays a backup Cypher file; `--clean` flag wipes DB first |
+| `docs/BACKUP.md` | Backup/restore procedures, schedule recommendations, Docker volume snapshot alternative |
 
 ### Phase 1.5 — API framework
 | Tool | Purpose |

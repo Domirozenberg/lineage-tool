@@ -173,4 +173,63 @@ EOF
 
 ---
 
+## Phase 1: Task 1.4 — Graph Database Setup
+
+### 1. Run graph database integration tests
+```bash
+python3 -m pytest tests/integration/test_graph_database.py -v
+```
+**Expected**: `21 passed`
+
+### 2. Verify connection pool settings are active
+```bash
+python3 -c "
+from app.db.neo4j import get_db_status
+from app.core.config import settings
+s = get_db_status()
+print('Connected:', s['connected'])
+print('Pool size:', s['pool_size'], '(config:', settings.NEO4J_MAX_CONNECTION_POOL_SIZE, ')')
+"
+```
+**Expected**: `Connected: True`, pool size matches config value (default 50).
+
+### 3. Verify enhanced health endpoint
+```bash
+uvicorn app.main:app --reload &
+sleep 2
+curl -s http://localhost:8000/health | python3 -m json.tool
+```
+**Expected**:
+```json
+{
+  "status": "ok",
+  "version": "0.1.0",
+  "services": {
+    "neo4j": {"connected": true, ...},
+    "redis": {"connected": true, ...}
+  }
+}
+```
+
+### 4. Verify constraints exist in Neo4j
+Open http://localhost:7474 and run:
+```cypher
+SHOW CONSTRAINTS
+```
+**Expected**: 4 constraints listed — `datasource_id_unique`, `dataobject_id_unique`, `column_id_unique`, `lineage_id_unique`.
+
+### 5. Performance smoke test (1000 nodes < 100ms)
+```bash
+python3 -m pytest tests/integration/test_graph_database.py::TestPerformance -v
+```
+**Expected**: All 3 performance tests pass.
+
+### 6. Verify backup scripts are present and executable
+```bash
+ls -lh scripts/backup_neo4j.sh scripts/restore_neo4j.sh
+```
+**Expected**: Both files exist with execute permission (`-rwxr-xr-x`).
+
+---
+
 *Add a new section here after each completed task.*

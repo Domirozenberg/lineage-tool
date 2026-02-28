@@ -10,7 +10,8 @@ Track task completion and associated tests. Update when a task and its tests are
   - [x] tests/unit/test_schema.py (44/44 passing)
 - [x] 1.3 Implement core data models
   - [x] tests/integration/test_repositories.py (28/28 passing)
-- [ ] 1.4 Set up graph database
+- [x] 1.4 Set up graph database
+  - [x] tests/integration/test_graph_database.py (21/21 passing)
 - [ ] 1.5 Create basic API framework
 - [ ] 1.6 Implement authentication system
 

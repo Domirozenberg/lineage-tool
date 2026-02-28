@@ -15,6 +15,11 @@ class Settings(BaseSettings):
     NEO4J_URI: str = "bolt://localhost:7687"
     NEO4J_USER: str = "neo4j"
     NEO4J_PASSWORD: str = "password"
+    # Connection pool
+    NEO4J_MAX_CONNECTION_POOL_SIZE: int = 50
+    NEO4J_MAX_CONNECTION_LIFETIME_S: float = 3600.0
+    NEO4J_CONNECTION_ACQUISITION_TIMEOUT_S: float = 60.0
+    NEO4J_CONNECTION_TIMEOUT_S: float = 30.0
 
     # Redis
     REDIS_URL: str = "redis://localhost:6379"
