@@ -272,10 +272,16 @@ Local environment overrides (DB credentials, secret keys). Loaded automatically 
 
 Tools that will be added as the project progresses.
 
-### Phase 1.3 — Core data models (next)
-| Tool | Purpose |
+### Phase 1.3 — Core data models ✓ done
+| File | Purpose |
 |---|---|
-| Neo4j driver (already installed) | Repository classes for CRUD on all four entity types |
+| `app/db/neo4j.py` | Singleton driver, `get_session()` context manager, `verify_connectivity()` |
+| `app/db/constraints.py` | Idempotent Cypher statements for uniqueness constraints and lookup indexes |
+| `app/db/base_repository.py` | ABC with `create/get_by_id/list_all/update/delete`; UUID/datetime/dict serialisation helpers |
+| `app/db/repositories/data_source.py` | DataSource CRUD + `list_by_platform()` |
+| `app/db/repositories/data_object.py` | DataObject CRUD + `list_by_source()`, `list_by_type()` |
+| `app/db/repositories/column.py` | Column CRUD + `list_by_object()` (ordered by position) |
+| `app/db/repositories/lineage.py` | Lineage CRUD + `list_by_source/target()`, `get_downstream()`, `get_upstream()` graph traversals |
 
 ### Phase 1.4 — Graph database setup
 | Tool | Purpose |

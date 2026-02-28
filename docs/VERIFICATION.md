@@ -117,4 +117,60 @@ Invalid: ['...is not one of...']
 
 ---
 
+## Phase 1: Task 1.3 — Core Data Models / Persistence Layer
+
+### 1. Ensure Neo4j is running
+```bash
+docker compose ps
+```
+**Expected**: `lineage-neo4j` shows status `healthy`.
+
+### 2. Run integration tests
+```bash
+cd /Users/drozenberg/lineage-tool
+source venv/bin/activate
+python3 -m pytest tests/integration/test_repositories.py -v
+```
+**Expected**: `28 passed`
+
+### 3. Verify constraints applied at startup
+```bash
+uvicorn app.main:app --reload
+```
+Open http://localhost:7474, run this Cypher:
+```cypher
+SHOW CONSTRAINTS
+```
+**Expected**: Constraints for `DataSource`, `DataObject`, `Column`, `Lineage` on `id` are listed.
+
+### 4. Smoke-test a full lineage chain via Python
+```bash
+python3 - <<'EOF'
+from app.db.neo4j import get_session
+from app.db.constraints import apply_constraints_and_indexes
+from app.db.repositories.data_source import DataSourceRepository
+from app.db.repositories.data_object import DataObjectRepository
+from app.db.repositories.lineage import LineageRepository
+from app.models.schema import DataSource, DataObject, DataObjectType, Lineage, Platform
+
+with get_session() as s:
+    apply_constraints_and_indexes(s)
+    src = DataSource(name="smoke-pg", platform=Platform.POSTGRESQL)
+    DataSourceRepository(s).create(src)
+    tbl = DataObject(source_id=src.id, object_type=DataObjectType.TABLE, name="smoke-orders")
+    vw  = DataObject(source_id=src.id, object_type=DataObjectType.VIEW, name="smoke-v-orders")
+    DataObjectRepository(s).create(tbl)
+    DataObjectRepository(s).create(vw)
+    lin = Lineage(source_object_id=tbl.id, target_object_id=vw.id)
+    LineageRepository(s).create(lin)
+    downstream = LineageRepository(s).get_downstream(tbl.id)
+    print("Downstream nodes:", [d["props"]["name"] for d in downstream])
+    # cleanup
+    s.run("MATCH (n) WHERE n.name STARTS WITH 'smoke-' DETACH DELETE n")
+EOF
+```
+**Expected**: `Downstream nodes: ['smoke-v-orders']`
+
+---
+
 *Add a new section here after each completed task.*
