@@ -292,11 +292,19 @@ Tools that will be added as the project progresses.
 | `scripts/restore_neo4j.sh` | Replays a backup Cypher file; `--clean` flag wipes DB first |
 | `docs/BACKUP.md` | Backup/restore procedures, schedule recommendations, Docker volume snapshot alternative |
 
-### Phase 1.5 — API framework
-| Tool | Purpose |
+### Phase 1.5 — API framework ✓ done
+| File | Purpose |
 |---|---|
-| FastAPI routers | `/api/v1/sources`, `/api/v1/objects`, `/api/v1/lineage` endpoints |
-| Pydantic request/response models | Input validation and serialised API responses |
+| `app/api/v1/dependencies.py` | `DbSession` (Neo4j session per request) + `Pagination` (skip/limit query params) |
+| `app/api/v1/models/sources.py` | `DataSourceCreate`, `DataSourceUpdate`, `DataSourceListResponse` |
+| `app/api/v1/models/objects.py` | `DataObjectCreate`, `DataObjectUpdate`, `DataObjectListResponse` |
+| `app/api/v1/models/columns.py` | `ColumnCreate`, `ColumnUpdate`, `ColumnListResponse` |
+| `app/api/v1/models/lineage.py` | `LineageCreate`, `LineageUpdate`, `ImpactResponse` |
+| `app/api/v1/routers/sources.py` | `GET/POST /api/v1/sources/`, `GET/PUT/DELETE /api/v1/sources/{id}` |
+| `app/api/v1/routers/objects.py` | Same for objects + `source_id`/`type` filter params |
+| `app/api/v1/routers/columns.py` | Same for columns + `object_id` filter param |
+| `app/api/v1/routers/lineage.py` | Same for lineage + `/impact/{id}/downstream` and `/upstream` traversal endpoints |
+| `app/core/errors.py` | `NotFoundError` → 404, `ConflictError` → 409, `UnprocessableError` → 422, generic → 500 |
 
 ### Phase 1.6 — Authentication
 | Tool | Purpose |

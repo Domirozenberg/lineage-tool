@@ -5,7 +5,17 @@ import redis as redis_lib
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.v1.routers import columns, lineage, objects, sources
 from app.core.config import settings
+from app.core.errors import (
+    ConflictError,
+    NotFoundError,
+    UnprocessableError,
+    conflict_handler,
+    generic_error_handler,
+    not_found_handler,
+    unprocessable_handler,
+)
 from app.db.constraints import apply_constraints_and_indexes
 from app.db.neo4j import close_driver, get_db_status, get_session
 
@@ -25,6 +35,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# --- Middleware ---
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
@@ -33,7 +44,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# --- Exception handlers ---
+app.add_exception_handler(NotFoundError, not_found_handler)  # type: ignore[arg-type]
+app.add_exception_handler(ConflictError, conflict_handler)  # type: ignore[arg-type]
+app.add_exception_handler(UnprocessableError, unprocessable_handler)  # type: ignore[arg-type]
+app.add_exception_handler(Exception, generic_error_handler)  # type: ignore[arg-type]
 
+# --- Routers ---
+app.include_router(sources.router, prefix=settings.API_V1_STR)
+app.include_router(objects.router, prefix=settings.API_V1_STR)
+app.include_router(columns.router, prefix=settings.API_V1_STR)
+app.include_router(lineage.router, prefix=settings.API_V1_STR)
+
+
+# --- Health ---
 def _redis_status() -> dict[str, Any]:
     status: dict[str, Any] = {"connected": False, "url": settings.REDIS_URL, "error": None}
     try:

@@ -17,7 +17,7 @@ from enum import Enum
 from typing import Any, Optional
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, computed_field, field_validator
 
 CURRENT_SCHEMA_VERSION = "1.1.0"
 
@@ -137,6 +137,7 @@ class DataObject(LineageBaseModel):
     sql_definition: Optional[str] = None
     extra_metadata: dict[str, Any] = Field(default_factory=dict)
 
+    @computed_field  # type: ignore[misc]
     @property
     def qualified_name(self) -> str:
         """Dot-separated fully-qualified name, omitting empty segments."""

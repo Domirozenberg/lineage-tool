@@ -12,7 +12,9 @@ Track task completion and associated tests. Update when a task and its tests are
   - [x] tests/integration/test_repositories.py (28/28 passing)
 - [x] 1.4 Set up graph database
   - [x] tests/integration/test_graph_database.py (21/21 passing)
-- [ ] 1.5 Create basic API framework
+- [x] 1.5 Create basic API framework
+  - [x] tests/unit/test_api_models.py (22/22 passing)
+  - [x] tests/integration/test_api.py (29/29 passing)
 - [ ] 1.6 Implement authentication system
 
 ## Phase 2: First Connector - Database Lineage (Weeks 4-6)

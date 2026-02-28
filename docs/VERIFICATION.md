@@ -232,4 +232,43 @@ ls -lh scripts/backup_neo4j.sh scripts/restore_neo4j.sh
 
 ---
 
+## Phase 1: Task 1.5 — API Framework
+
+### 1. Start the server
+```bash
+source venv/bin/activate
+uvicorn app.main:app --reload
+```
+
+### 2. Open Swagger UI
+Visit http://localhost:8000/docs
+**Expected**: All 4 routers visible — sources, objects, columns, lineage.
+
+### 3. Run API tests
+```bash
+python3 -m pytest tests/unit/test_api_models.py tests/integration/test_api.py -v
+```
+**Expected**: `51 passed`
+
+### 4. Exercise the API end-to-end via curl
+```bash
+# Create a source
+SRC=$(curl -s -X POST http://localhost:8000/api/v1/sources/ \
+  -H "Content-Type: application/json" \
+  -d '{"name":"curl-pg","platform":"postgresql","host":"localhost"}' | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
+
+# Create a table under that source
+TBL=$(curl -s -X POST http://localhost:8000/api/v1/objects/ \
+  -H "Content-Type: application/json" \
+  -d "{\"source_id\":\"$SRC\",\"object_type\":\"table\",\"name\":\"orders\",\"schema_name\":\"public\"}" \
+  | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['id'],'→',d['qualified_name'])")
+echo "Created: $TBL"
+
+# Verify 404 for unknown ID
+curl -s http://localhost:8000/api/v1/sources/00000000-0000-0000-0000-000000000000 | python3 -m json.tool
+```
+**Expected**: `404` with `{"detail": "DataSource 00000000-... not found"}`
+
+---
+
 *Add a new section here after each completed task.*
