@@ -67,4 +67,54 @@ pre-commit run --all-files
 
 ---
 
+## Phase 1: Task 1.2 — Universal Metadata Schema
+
+### 1. Verify models import cleanly
+```bash
+cd /Users/drozenberg/lineage-tool
+source venv/bin/activate
+python3 -c "from app.models import DataSource, DataObject, Column, Lineage, CURRENT_SCHEMA_VERSION; print('OK', CURRENT_SCHEMA_VERSION)"
+```
+**Expected**: `OK 1.0.0`
+
+### 2. Run schema tests
+```bash
+python3 -m pytest tests/unit/test_schema.py -v
+```
+**Expected**: `44 passed`
+
+### 3. Smoke-test entity creation
+```bash
+python3 - <<'EOF'
+from app.models import DataSource, DataObject, DataObjectType, Platform
+src = DataSource(name="prod-db", platform=Platform.POSTGRESQL, host="localhost", port=5432)
+obj = DataObject(source_id=src.id, object_type=DataObjectType.TABLE,
+                 name="orders", schema_name="public", database_name="analytics")
+print("DataSource:", src.name, src.platform)
+print("DataObject qualified_name:", obj.qualified_name)
+EOF
+```
+**Expected**:
+```
+DataSource: prod-db postgresql
+DataObject qualified_name: analytics.public.orders
+```
+
+### 4. Smoke-test metadata validation
+```bash
+python3 - <<'EOF'
+from app.models import validate_metadata, get_platform_schema
+schema = get_platform_schema("postgresql")
+print("Valid:", validate_metadata({"ssl_mode": "require"}, schema))
+print("Invalid:", validate_metadata({"ssl_mode": "bad-value"}, schema))
+EOF
+```
+**Expected**:
+```
+Valid: []
+Invalid: ['...is not one of...']
+```
+
+---
+
 *Add a new section here after each completed task.*

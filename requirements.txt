@@ -24,5 +24,8 @@ httpx>=0.27.0
 # SQL parsing (for connector lineage extraction)
 sqlglot>=23.0.0
 
+# JSON Schema validation
+jsonschema>=4.21.0
+
 # Utilities
 python-dotenv>=1.0.0
