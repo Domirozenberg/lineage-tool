@@ -27,6 +27,10 @@ class Settings(BaseSettings):
     # Auth
     SECRET_KEY: str = "change-me-in-production"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    # Bootstrapped admin (created on first startup when no users exist)
+    FIRST_ADMIN_EMAIL: str = "admin@lineage-tool.dev"
+    FIRST_ADMIN_PASSWORD: str = "change-me-in-production"
 
 
 settings = Settings()

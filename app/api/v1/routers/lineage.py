@@ -5,7 +5,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query, status
 
-from app.api.v1.dependencies import DbSession
+from app.api.v1.dependencies import CurrentUser, DbSession, WriterUser
 from app.api.v1.models.lineage import (
     ImpactNode,
     ImpactResponse,
@@ -21,7 +21,7 @@ router = APIRouter(prefix="/lineage", tags=["lineage"])
 
 
 @router.post("/", response_model=LineageResponse, status_code=status.HTTP_201_CREATED)
-def create_lineage(body: LineageCreate, session: DbSession) -> LineageResponse:
+def create_lineage(body: LineageCreate, session: DbSession, _: WriterUser) -> LineageResponse:
     repo = LineageRepository(session)
     lin = body.to_domain()
     return repo.create(lin)
@@ -30,6 +30,7 @@ def create_lineage(body: LineageCreate, session: DbSession) -> LineageResponse:
 @router.get("/", response_model=LineageListResponse)
 def list_lineage(
     session: DbSession,
+    _: CurrentUser,
     source_object_id: Annotated[
         Optional[UUID], Query(description="Filter by source DataObject ID")
     ] = None,
@@ -48,7 +49,7 @@ def list_lineage(
 
 
 @router.get("/{lineage_id}", response_model=LineageResponse)
-def get_lineage(lineage_id: UUID, session: DbSession) -> LineageResponse:
+def get_lineage(lineage_id: UUID, session: DbSession, _: CurrentUser) -> LineageResponse:
     repo = LineageRepository(session)
     lin = repo.get_by_id(lineage_id)
     if lin is None:
@@ -58,7 +59,7 @@ def get_lineage(lineage_id: UUID, session: DbSession) -> LineageResponse:
 
 @router.put("/{lineage_id}", response_model=LineageResponse)
 def update_lineage(
-    lineage_id: UUID, body: LineageUpdate, session: DbSession
+    lineage_id: UUID, body: LineageUpdate, session: DbSession, _: WriterUser
 ) -> LineageResponse:
     repo = LineageRepository(session)
     lin = repo.get_by_id(lineage_id)
@@ -69,7 +70,7 @@ def update_lineage(
 
 
 @router.delete("/{lineage_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_lineage(lineage_id: UUID, session: DbSession) -> None:
+def delete_lineage(lineage_id: UUID, session: DbSession, _: WriterUser) -> None:
     repo = LineageRepository(session)
     if not repo.delete(lineage_id):
         raise NotFoundError("Lineage", lineage_id)
@@ -79,6 +80,7 @@ def delete_lineage(lineage_id: UUID, session: DbSession) -> None:
 def get_downstream(
     object_id: UUID,
     session: DbSession,
+    _: CurrentUser,
     max_depth: Annotated[int, Query(ge=1, le=20, description="Max traversal depth")] = 10,
 ) -> ImpactResponse:
     repo = LineageRepository(session)
@@ -101,6 +103,7 @@ def get_downstream(
 def get_upstream(
     object_id: UUID,
     session: DbSession,
+    _: CurrentUser,
     max_depth: Annotated[int, Query(ge=1, le=20, description="Max traversal depth")] = 10,
 ) -> ImpactResponse:
     repo = LineageRepository(session)

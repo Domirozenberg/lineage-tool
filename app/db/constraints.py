@@ -23,9 +23,15 @@ _CONSTRAINTS = [
     "FOR (n:Column) REQUIRE n.id IS UNIQUE",
     "CREATE CONSTRAINT lineage_id_unique IF NOT EXISTS "
     "FOR (n:Lineage) REQUIRE n.id IS UNIQUE",
+    "CREATE CONSTRAINT user_id_unique IF NOT EXISTS "
+    "FOR (n:User) REQUIRE n.id IS UNIQUE",
+    "CREATE CONSTRAINT user_email_unique IF NOT EXISTS "
+    "FOR (n:User) REQUIRE n.email IS UNIQUE",
 ]
 
 _INDEXES = [
+    "CREATE INDEX user_api_key_hash IF NOT EXISTS "
+    "FOR (n:User) ON (n.api_key_hash)",
     "CREATE INDEX datasource_name IF NOT EXISTS "
     "FOR (n:DataSource) ON (n.name)",
     "CREATE INDEX datasource_platform IF NOT EXISTS "

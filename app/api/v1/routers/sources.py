@@ -5,7 +5,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query, status
 
-from app.api.v1.dependencies import DbSession, PaginationDep
+from app.api.v1.dependencies import CurrentUser, DbSession, PaginationDep, WriterUser
 from app.api.v1.models.sources import (
     DataSourceCreate,
     DataSourceListResponse,
@@ -20,7 +20,7 @@ router = APIRouter(prefix="/sources", tags=["sources"])
 
 
 @router.post("/", response_model=DataSourceResponse, status_code=status.HTTP_201_CREATED)
-def create_source(body: DataSourceCreate, session: DbSession) -> DataSourceResponse:
+def create_source(body: DataSourceCreate, session: DbSession, _: WriterUser) -> DataSourceResponse:
     repo = DataSourceRepository(session)
     source = body.to_domain()
     return repo.create(source)
@@ -30,6 +30,7 @@ def create_source(body: DataSourceCreate, session: DbSession) -> DataSourceRespo
 def list_sources(
     session: DbSession,
     pagination: PaginationDep,
+    _: CurrentUser,
     platform: Annotated[Optional[Platform], Query(description="Filter by platform")] = None,
 ) -> DataSourceListResponse:
     repo = DataSourceRepository(session)
@@ -39,7 +40,7 @@ def list_sources(
 
 
 @router.get("/{source_id}", response_model=DataSourceResponse)
-def get_source(source_id: UUID, session: DbSession) -> DataSourceResponse:
+def get_source(source_id: UUID, session: DbSession, _: CurrentUser) -> DataSourceResponse:
     repo = DataSourceRepository(session)
     source = repo.get_by_id(source_id)
     if source is None:
@@ -49,7 +50,7 @@ def get_source(source_id: UUID, session: DbSession) -> DataSourceResponse:
 
 @router.put("/{source_id}", response_model=DataSourceResponse)
 def update_source(
-    source_id: UUID, body: DataSourceUpdate, session: DbSession
+    source_id: UUID, body: DataSourceUpdate, session: DbSession, _: WriterUser
 ) -> DataSourceResponse:
     repo = DataSourceRepository(session)
     source = repo.get_by_id(source_id)
@@ -60,7 +61,7 @@ def update_source(
 
 
 @router.delete("/{source_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_source(source_id: UUID, session: DbSession) -> None:
+def delete_source(source_id: UUID, session: DbSession, _: WriterUser) -> None:
     repo = DataSourceRepository(session)
     if not repo.delete(source_id):
         raise NotFoundError("DataSource", source_id)

@@ -271,4 +271,82 @@ curl -s http://localhost:8000/api/v1/sources/00000000-0000-0000-0000-00000000000
 
 ---
 
+## Phase 1, Task 1.6 — Authentication System
+
+### Pre-requisites
+Neo4j + Redis running (`docker compose up -d`), venv activated.
+
+### 1. Run tests
+```bash
+python3 -m pytest tests/unit/test_security.py tests/integration/test_auth.py -v
+```
+**Expected**: 47 passing (25 unit + 22 integration).
+
+### 2. Smoke-test bootstrap admin login
+```bash
+curl -s -X POST http://localhost:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@lineage-tool.dev","password":"change-me-in-production"}' \
+  | python3 -m json.tool
+```
+**Expected**: JSON with `access_token`, `refresh_token`, `token_type: "bearer"`.
+
+### 3. Protected endpoint without token → 401
+```bash
+curl -s http://localhost:8000/api/v1/sources/
+```
+**Expected**: `{"detail": "Not authenticated"}`.
+
+### 4. Call with bearer token → 200
+```bash
+TOKEN=$(curl -s -X POST http://localhost:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@lineage-tool.dev","password":"change-me-in-production"}' \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
+curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8000/api/v1/sources/
+```
+**Expected**: `{"items": [...], "count": ...}`.
+
+### 5. Register a regular user (admin only)
+```bash
+curl -s -X POST http://localhost:8000/api/v1/auth/register \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","password":"mypassword!","role":"user"}' \
+  | python3 -m json.tool
+```
+**Expected**: 201 with `role: "user"`.
+
+### 6. Generate API key
+```bash
+curl -s -X POST http://localhost:8000/api/v1/auth/api-key \
+  -H "Authorization: Bearer $TOKEN" | python3 -m json.tool
+```
+**Expected**: `{"api_key": "lng_...", "note": "Store this key securely..."}`.
+
+### 7. Authenticate with API key via X-API-Key header
+```bash
+API_KEY=<key from step 6>
+curl -s -H "X-API-Key: $API_KEY" http://localhost:8000/api/v1/auth/me | python3 -m json.tool
+```
+**Expected**: Admin user profile JSON.
+
+### 8. Offline folder validation utility
+```bash
+python3 -c "
+from app.core.security import validate_offline_folder
+import tempfile, os
+with tempfile.TemporaryDirectory() as d:
+    for f in ['tables.json','columns.json']:
+        open(os.path.join(d,f),'w').close()
+    print('valid:', validate_offline_folder(d, ['tables.json','columns.json']))
+print('missing:', validate_offline_folder('/tmp', ['missing.json']))
+"
+```
+**Expected**:
+- `valid: []`
+- `missing: ['Required file missing: missing.json']`
+
+---
+
 *Add a new section here after each completed task.*

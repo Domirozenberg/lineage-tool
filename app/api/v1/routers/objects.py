@@ -5,7 +5,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query, status
 
-from app.api.v1.dependencies import DbSession, PaginationDep
+from app.api.v1.dependencies import CurrentUser, DbSession, PaginationDep, WriterUser
 from app.api.v1.models.objects import (
     DataObjectCreate,
     DataObjectListResponse,
@@ -20,7 +20,7 @@ router = APIRouter(prefix="/objects", tags=["objects"])
 
 
 @router.post("/", response_model=DataObjectResponse, status_code=status.HTTP_201_CREATED)
-def create_object(body: DataObjectCreate, session: DbSession) -> DataObjectResponse:
+def create_object(body: DataObjectCreate, session: DbSession, _: WriterUser) -> DataObjectResponse:
     repo = DataObjectRepository(session)
     obj = body.to_domain()
     return repo.create(obj)
@@ -30,6 +30,7 @@ def create_object(body: DataObjectCreate, session: DbSession) -> DataObjectRespo
 def list_objects(
     session: DbSession,
     pagination: PaginationDep,
+    _: CurrentUser,
     source_id: Annotated[Optional[UUID], Query(description="Filter by DataSource ID")] = None,
     object_type: Annotated[
         Optional[DataObjectType], Query(description="Filter by object type")
@@ -47,7 +48,7 @@ def list_objects(
 
 
 @router.get("/{object_id}", response_model=DataObjectResponse)
-def get_object(object_id: UUID, session: DbSession) -> DataObjectResponse:
+def get_object(object_id: UUID, session: DbSession, _: CurrentUser) -> DataObjectResponse:
     repo = DataObjectRepository(session)
     obj = repo.get_by_id(object_id)
     if obj is None:
@@ -57,7 +58,7 @@ def get_object(object_id: UUID, session: DbSession) -> DataObjectResponse:
 
 @router.put("/{object_id}", response_model=DataObjectResponse)
 def update_object(
-    object_id: UUID, body: DataObjectUpdate, session: DbSession
+    object_id: UUID, body: DataObjectUpdate, session: DbSession, _: WriterUser
 ) -> DataObjectResponse:
     repo = DataObjectRepository(session)
     obj = repo.get_by_id(object_id)
@@ -68,7 +69,7 @@ def update_object(
 
 
 @router.delete("/{object_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_object(object_id: UUID, session: DbSession) -> None:
+def delete_object(object_id: UUID, session: DbSession, _: WriterUser) -> None:
     repo = DataObjectRepository(session)
     if not repo.delete(object_id):
         raise NotFoundError("DataObject", object_id)

@@ -306,12 +306,19 @@ Tools that will be added as the project progresses.
 | `app/api/v1/routers/lineage.py` | Same for lineage + `/impact/{id}/downstream` and `/upstream` traversal endpoints |
 | `app/core/errors.py` | `NotFoundError` → 404, `ConflictError` → 409, `UnprocessableError` → 422, generic → 500 |
 
-### Phase 1.6 — Authentication
-| Tool | Purpose |
+### Phase 1.6 — Authentication ✓ done
+| File / Tool | Purpose |
 |---|---|
-| python-jose | JWT token generation and validation |
-| passlib/bcrypt | Password hashing |
-| FastAPI `Depends` | Protected route guards |
+| `app/core/security.py` | `hash_password`, `verify_password` (bcrypt direct), `create_access_token`, `create_refresh_token`, `decode_token`, `generate_api_key`, `hash_api_key`, `validate_offline_folder` |
+| `app/db/repositories/user.py` | `User` model + `UserRepository` (create/get_by_id/get_by_email/get_by_api_key_hash/update) |
+| `app/api/v1/models/auth.py` | `RegisterRequest`, `LoginRequest`, `TokenResponse`, `RefreshRequest`, `UserResponse`, `ApiKeyResponse` |
+| `app/api/v1/routers/auth.py` | `POST /auth/login`, `POST /auth/register`, `POST /auth/refresh`, `GET /auth/me`, `POST /auth/api-key` |
+| `app/api/v1/dependencies.py` (updated) | `get_current_user` (JWT + API-key via Bearer/X-API-Key), `require_admin`, `require_writer`; `CurrentUser`, `AdminUser`, `WriterUser` type aliases |
+| `app/main.py` (updated) | `_seed_first_admin()` seeds bootstrap admin on first startup; auth router included |
+| `tests/integration/conftest.py` | Session-scoped fixture that ensures constraints and admin user exist before any integration test |
+| `bcrypt>=4.0.0` | Password hashing (replaces passlib which is incompatible with bcrypt 4.x) |
+| `email-validator>=2.1.0` | Email format validation with `check_deliverability=False` for private domains |
+| `python-jose[cryptography]` | JWT HS256 encoding/decoding |
 
 ### Phase 2 — PostgreSQL Connector
 | Tool | Purpose |

@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.routers import columns, lineage, objects, sources
+from app.api.v1.routers import auth as auth_router
 from app.core.config import settings
 from app.core.errors import (
     ConflictError,
@@ -16,14 +17,31 @@ from app.core.errors import (
     not_found_handler,
     unprocessable_handler,
 )
+from app.core.security import hash_password
 from app.db.constraints import apply_constraints_and_indexes
 from app.db.neo4j import close_driver, get_db_status, get_session
+from app.db.repositories.user import User, UserRepository, UserRole
+
+
+def _seed_first_admin() -> None:
+    """Create the bootstrap admin user if no users exist in the database."""
+    with get_session() as session:
+        repo = UserRepository(session)
+        if repo.count() == 0:
+            admin = User(
+                email=settings.FIRST_ADMIN_EMAIL.lower(),
+                hashed_password=hash_password(settings.FIRST_ADMIN_PASSWORD),
+                role=UserRole.ADMIN,
+                full_name="Bootstrap Admin",
+            )
+            repo.create(admin)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     with get_session() as session:
         apply_constraints_and_indexes(session)
+    _seed_first_admin()
     yield
     close_driver()
 
@@ -51,6 +69,7 @@ app.add_exception_handler(UnprocessableError, unprocessable_handler)  # type: ig
 app.add_exception_handler(Exception, generic_error_handler)  # type: ignore[arg-type]
 
 # --- Routers ---
+app.include_router(auth_router.router, prefix=settings.API_V1_STR)
 app.include_router(sources.router, prefix=settings.API_V1_STR)
 app.include_router(objects.router, prefix=settings.API_V1_STR)
 app.include_router(columns.router, prefix=settings.API_V1_STR)
